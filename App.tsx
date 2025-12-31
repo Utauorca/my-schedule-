@@ -12,9 +12,35 @@ import { analyzeSchedule } from './services/geminiService';
 type ViewMode = 'timetable' | 'tasks' | 'calendar';
 
 const App: React.FC = () => {
-  // --- State ---
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
+  // --- State with Lazy Initialization (Read from LS immediately) ---
+  const [courses, setCourses] = useState<Course[]>(() => {
+    try {
+      const saved = localStorage.getItem('smart_schedule_courses');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Failed to parse courses from local storage");
+      return [];
+    }
+  });
+
+  const [tasks, setTasks] = useState<Task[]>(() => {
+    try {
+      const saved = localStorage.getItem('smart_schedule_tasks');
+      return saved ? JSON.parse(saved) : [];
+    } catch (e) {
+      console.error("Failed to parse tasks from local storage");
+      return [];
+    }
+  });
+
+  const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(() => {
+    try {
+      const saved = localStorage.getItem('smart_schedule_analysis');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
   
   const [viewMode, setViewMode] = useState<ViewMode>('timetable');
   
@@ -23,21 +49,8 @@ const App: React.FC = () => {
   const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
   
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(null);
 
-  // --- Persistence ---
-  useEffect(() => {
-    const savedCourses = localStorage.getItem('smart_schedule_courses');
-    const savedTasks = localStorage.getItem('smart_schedule_tasks');
-    
-    if (savedCourses) {
-      try { setCourses(JSON.parse(savedCourses)); } catch (e) { console.error("Failed to parse courses"); }
-    }
-    if (savedTasks) {
-      try { setTasks(JSON.parse(savedTasks)); } catch (e) { console.error("Failed to parse tasks"); }
-    }
-  }, []);
-
+  // --- Persistence Effects (Write to LS on change) ---
   useEffect(() => {
     localStorage.setItem('smart_schedule_courses', JSON.stringify(courses));
   }, [courses]);
@@ -46,15 +59,23 @@ const App: React.FC = () => {
     localStorage.setItem('smart_schedule_tasks', JSON.stringify(tasks));
   }, [tasks]);
 
+  useEffect(() => {
+    if (analysisResult) {
+      localStorage.setItem('smart_schedule_analysis', JSON.stringify(analysisResult));
+    } else {
+      localStorage.removeItem('smart_schedule_analysis');
+    }
+  }, [analysisResult]);
+
   // --- Handlers ---
   const handleAddCourse = (course: Course) => {
     setCourses(prev => [...prev, course]);
-    setAnalysisResult(null); 
+    setAnalysisResult(null); // Invalidate analysis when schedule changes
   };
 
   const handleDeleteCourse = (id: string) => {
     setCourses(prev => prev.filter(c => c.id !== id));
-    setAnalysisResult(null);
+    setAnalysisResult(null); // Invalidate analysis when schedule changes
   };
 
   const handleAddTask = (task: Task) => {
