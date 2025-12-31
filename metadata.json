@@ -1,0 +1,5 @@
+{
+  "name": "SmartSchedule",
+  "description": "A smart timetable application that helps you organize your classes and analyzes your workload using Gemini AI.",
+  "requestFramePermissions": []
+}
