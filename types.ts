@@ -23,3 +23,15 @@ export interface AIAnalysisResult {
   heavyDays: string[];
   suggestions: string[];
 }
+
+export interface UserSettings {
+  supabaseUrl: string;
+  supabaseKey: string;
+  syncId: string; // A unique identifier for the user's data row
+}
+
+export interface AppState {
+  courses: Course[];
+  tasks: Task[];
+  analysis: AIAnalysisResult | null;
+}
