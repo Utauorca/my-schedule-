@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Cloud, Save, Database, AlertCircle, Copy } from 'lucide-react';
+import { X, Cloud, Save, AlertCircle, Copy, Download, Upload } from 'lucide-react';
 import { UserSettings } from '../types';
 
 interface SettingsModalProps {
@@ -13,6 +13,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ currentSettings, o
   const [key, setKey] = useState(currentSettings?.supabaseKey || '');
   const [syncId, setSyncId] = useState(currentSettings?.syncId || crypto.randomUUID());
   const [showTutorial, setShowTutorial] = useState(false);
+  const [importString, setImportString] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,6 +37,41 @@ create policy "Public Access" on user_data for all using (true);`;
     alert("SQL 已複製！請至 Supabase SQL Editor 執行。");
   };
 
+  // Export current config to a base64 string
+  const handleExportConfig = () => {
+    if (!url || !key || !syncId) {
+      alert("請先填寫完整設定（URL, Key, ID）才能複製。");
+      return;
+    }
+    const configObj = { supabaseUrl: url, supabaseKey: key, syncId: syncId };
+    try {
+      const str = btoa(JSON.stringify(configObj));
+      navigator.clipboard.writeText(str);
+      alert("設定代碼已複製！請將此字串傳送到其他裝置，並在該裝置貼上以快速設定。");
+    } catch (e) {
+      alert("複製失敗");
+    }
+  };
+
+  // Import config from base64 string
+  const handleImportConfig = () => {
+    if (!importString) return;
+    try {
+      const json = JSON.parse(atob(importString));
+      if (json.supabaseUrl && json.supabaseKey && json.syncId) {
+        setUrl(json.supabaseUrl);
+        setKey(json.supabaseKey);
+        setSyncId(json.syncId);
+        setImportString('');
+        alert("設定已匯入！請記得點擊下方的「儲存設定」。");
+      } else {
+        throw new Error("格式錯誤");
+      }
+    } catch (e) {
+      alert("無效的設定代碼，請確認複製是否完整。");
+    }
+  };
+
   return (
     <div className="absolute inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
@@ -53,13 +89,48 @@ create policy "Public Access" on user_data for all using (true);`;
         <div className="flex-1 overflow-y-auto p-6">
           <form id="settings-form" onSubmit={handleSubmit} className="space-y-6">
             
+            {/* Quick Setup Section */}
+            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 space-y-3">
+              <h3 className="text-sm font-bold text-indigo-900 flex items-center gap-2">
+                 <Upload className="w-4 h-4" />
+                 跨裝置快速設定
+              </h3>
+              <p className="text-xs text-indigo-700">
+                在已設定好的裝置點擊「複製代碼」，傳送到新裝置貼上，即可免去手動輸入的麻煩。
+              </p>
+              <div className="flex gap-2">
+                <input 
+                  type="text" 
+                  placeholder="在此貼上設定代碼..." 
+                  value={importString}
+                  onChange={(e) => setImportString(e.target.value)}
+                  className="flex-1 px-3 py-1.5 text-sm rounded-lg border border-indigo-200 focus:ring-2 focus:ring-indigo-300 outline-none"
+                />
+                <button 
+                  type="button"
+                  onClick={handleImportConfig}
+                  className="px-3 py-1.5 bg-white border border-indigo-200 text-indigo-700 text-sm font-medium rounded-lg hover:bg-indigo-100 transition-colors"
+                >
+                  匯入
+                </button>
+                <button 
+                  type="button"
+                  onClick={handleExportConfig}
+                  className="px-3 py-1.5 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors flex items-center gap-1 shrink-0"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  複製代碼
+                </button>
+              </div>
+            </div>
+
             {/* Tutorial Toggle */}
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-4">
               <div className="flex gap-3">
                 <AlertCircle className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
                 <div className="space-y-2">
                   <p className="text-sm text-blue-800 font-medium">
-                    想要跨平台使用？請連接免費的 Supabase 資料庫。
+                    初次使用？請連接免費的 Supabase 資料庫。
                   </p>
                   <button 
                     type="button" 
