@@ -45,13 +45,14 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({ courses, onDeleteC
 
       {/* Grid Content */}
       <div className="flex-1 overflow-auto relative bg-white" style={{ minHeight: '600px' }}>
-        <div className="flex relative min-w-[800px]" style={{ height: `${(END_HOUR - START_HOUR + 1) * 60}px` }}>
+        {/* Added mt-6 here to allow space for the first time label (e.g. 07:00) which has negative top positioning */}
+        <div className="flex relative min-w-[800px] mt-6 pb-10" style={{ height: `${(END_HOUR - START_HOUR + 1) * 60}px` }}>
           
           {/* Time Labels Sidebar */}
           <div className="w-16 flex-shrink-0 border-r border-gray-100 bg-white z-10 sticky left-0 text-xs text-gray-400 font-medium select-none shadow-[4px_0_24px_-12px_rgba(0,0,0,0.1)]">
             {hours.map((hour) => (
               <div key={hour} className="h-[60px] relative border-b border-gray-50">
-                <span className="absolute -top-2.5 w-full text-center block">
+                <span className="absolute -top-2.5 w-full text-center block bg-white">
                   {hour.toString().padStart(2, '0')}:00
                 </span>
               </div>

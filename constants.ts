@@ -31,5 +31,5 @@ export const COLORS = [
   'bg-rose-100 border-rose-300 text-rose-800',
 ];
 
-export const START_HOUR = 8; // 8 AM
+export const START_HOUR = 7; // 7 AM
 export const END_HOUR = 22;   // 10 PM
