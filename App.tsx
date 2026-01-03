@@ -30,7 +30,11 @@ const App: React.FC = () => {
   // --- UI State ---
   const [viewMode, setViewMode] = useState<ViewMode>('timetable');
   const [isCourseFormOpen, setIsCourseFormOpen] = useState(false);
+  const [editingCourse, setEditingCourse] = useState<Course | null>(null);
+  
   const [isTaskFormOpen, setIsTaskFormOpen] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+
   const [isAdvisorOpen, setIsAdvisorOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -104,22 +108,58 @@ const App: React.FC = () => {
   };
 
   // --- Data Handlers ---
-  const handleAddCourse = (course: Course) => {
-    setCourses(prev => [...prev, course]);
+  const handleSaveCourse = (courseData: Course) => {
+    if (editingCourse) {
+      // Update existing course
+      setCourses(prev => prev.map(c => c.id === courseData.id ? courseData : c));
+    } else {
+      // Add new course
+      setCourses(prev => [...prev, courseData]);
+    }
     setAnalysisResult(null); 
+    setEditingCourse(null);
+    setIsCourseFormOpen(false);
   };
 
   const handleDeleteCourse = (id: string) => {
-    setCourses(prev => prev.filter(c => c.id !== id));
-    setAnalysisResult(null);
+    if (confirm('確定要刪除這堂課程嗎？')) {
+      setCourses(prev => prev.filter(c => c.id !== id));
+      setAnalysisResult(null);
+    }
   };
 
-  const handleAddTask = (task: Task) => {
-    setTasks(prev => [...prev, task]);
+  const handleEditCourseTrigger = (course: Course) => {
+    setEditingCourse(course);
+  };
+
+  // --- Task Handlers ---
+  const handleSaveTask = (taskData: Task) => {
+    if (editingTask) {
+      // Update
+      setTasks(prev => prev.map(t => t.id === taskData.id ? taskData : t));
+    } else {
+      // Add
+      setTasks(prev => [...prev, taskData]);
+    }
+    setEditingTask(null);
+    setIsTaskFormOpen(false);
   };
 
   const handleDeleteTask = (id: string) => {
     setTasks(prev => prev.filter(t => t.id !== id));
+  };
+
+  const handleEditTaskTrigger = (task: Task) => {
+    setEditingTask(task);
+  };
+
+  const handleMoveTask = (taskId: string, isUrgent: boolean, isImportant: boolean) => {
+    setTasks(prev => prev.map(t => {
+      if (t.id === taskId) {
+        return { ...t, isUrgent, isImportant };
+      }
+      return t;
+    }));
   };
 
   const handleAnalyze = useCallback(async () => {
@@ -137,8 +177,13 @@ const App: React.FC = () => {
   }, [courses]);
 
   const handleOpenForm = () => {
-    if (viewMode === 'timetable') setIsCourseFormOpen(true);
-    else setIsTaskFormOpen(true);
+    if (viewMode === 'timetable') {
+      setEditingCourse(null);
+      setIsCourseFormOpen(true);
+    } else {
+      setEditingTask(null);
+      setIsTaskFormOpen(true);
+    }
   };
 
   const renderContent = () => {
@@ -152,9 +197,20 @@ const App: React.FC = () => {
              action={() => setIsCourseFormOpen(true)}
              actionText="新增課程"
           />
-        ) : <TimetableGrid courses={courses} onDeleteCourse={handleDeleteCourse} />;
-      case 'tasks': return <EisenhowerMatrix tasks={tasks} onDeleteTask={handleDeleteTask} />;
-      case 'calendar': return <CalendarView tasks={tasks} onDeleteTask={handleDeleteTask} />;
+        ) : <TimetableGrid 
+              courses={courses} 
+              onDeleteCourse={handleDeleteCourse} 
+              onEditCourse={handleEditCourseTrigger}
+            />;
+      case 'tasks': 
+        return <EisenhowerMatrix 
+                  tasks={tasks} 
+                  onDeleteTask={handleDeleteTask} 
+                  onEditTask={handleEditTaskTrigger}
+                  onMoveTask={handleMoveTask}
+               />;
+      case 'calendar': 
+        return <CalendarView tasks={tasks} onDeleteTask={handleDeleteTask} />;
       default: return null;
     }
   };
@@ -267,44 +323,9 @@ const App: React.FC = () => {
       </main>
 
       {/* Modals */}
-      {isCourseFormOpen && <CourseForm onAddCourse={handleAddCourse} onClose={() => setIsCourseFormOpen(false)} />}
-      {isTaskFormOpen && <TaskForm onAddTask={handleAddTask} onClose={() => setIsTaskFormOpen(false)} />}
-      {isSettingsOpen && <SettingsModal currentSettings={settings} onSave={handleSaveSettings} onClose={() => setIsSettingsOpen(false)} />}
-
-      <AIAdvisor 
-        isOpen={isAdvisorOpen}
-        onClose={() => setIsAdvisorOpen(false)}
-        isLoading={isAnalyzing}
-        analysis={analysisResult}
-        onAnalyze={handleAnalyze}
-      />
-    </div>
-  );
-};
-
-// Helper Component for Empty States
-const EmptyState: React.FC<{
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  action: () => void;
-  actionText: string;
-}> = ({ icon, title, description, action, actionText }) => (
-  <div className="h-full flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in zoom-in duration-500">
-    <div className="w-48 h-48 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-       {icon}
-    </div>
-    <div className="space-y-2 max-w-md">
-      <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
-      <p className="text-gray-500">{description}</p>
-    </div>
-    <button
-       onClick={action}
-       className="px-6 py-3 bg-white border border-gray-200 hover:border-brand-500 hover:text-brand-600 text-gray-600 rounded-xl font-medium transition-all shadow-sm"
-     >
-       {actionText}
-     </button>
- </div>
-);
-
-export default App;
+      {(isCourseFormOpen || editingCourse) && (
+        <CourseForm 
+          onSave={handleSaveCourse} 
+          onClose={() => {
+            setIsCourseFormOpen(false);
+            set

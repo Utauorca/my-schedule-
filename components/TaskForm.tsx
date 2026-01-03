@@ -1,31 +1,34 @@
 import React, { useState } from 'react';
-import { Plus, X, CalendarClock, AlertCircle, Clock, CheckCircle2, CircleDashed } from 'lucide-react';
+import { Plus, X, CalendarClock, AlertCircle, Clock, CheckCircle2, CircleDashed, PenLine } from 'lucide-react';
 import { Task } from '../types';
 
 interface TaskFormProps {
-  onAddTask: (task: Task) => void;
+  onSave: (task: Task) => void;
   onClose: () => void;
+  initialData?: Task | null;
 }
 
-export const TaskForm: React.FC<TaskFormProps> = ({ onAddTask, onClose }) => {
-  const [title, setTitle] = useState('');
-  const [deadline, setDeadline] = useState('');
-  const [isUrgent, setIsUrgent] = useState(true);
-  const [isImportant, setIsImportant] = useState(true);
+export const TaskForm: React.FC<TaskFormProps> = ({ onSave, onClose, initialData }) => {
+  const [title, setTitle] = useState(initialData?.title || '');
+  const [deadline, setDeadline] = useState(initialData?.deadline || '');
+  const [isUrgent, setIsUrgent] = useState(initialData?.isUrgent ?? true);
+  const [isImportant, setIsImportant] = useState(initialData?.isImportant ?? true);
+
+  const isEditing = !!initialData;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!title || !deadline) return;
 
     const newTask: Task = {
-      id: crypto.randomUUID(),
+      id: initialData?.id || crypto.randomUUID(),
       title,
       deadline,
       isUrgent,
       isImportant,
     };
 
-    onAddTask(newTask);
+    onSave(newTask);
     onClose();
   };
 
@@ -39,8 +42,12 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onAddTask, onClose }) => {
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <Plus className="w-5 h-5 text-indigo-600" />
-            新增代辦事項
+            {isEditing ? (
+              <PenLine className="w-5 h-5 text-indigo-600" />
+            ) : (
+              <Plus className="w-5 h-5 text-indigo-600" />
+            )}
+            {isEditing ? '編輯代辦事項' : '新增代辦事項'}
           </h2>
           <button 
             onClick={onClose}
@@ -157,7 +164,7 @@ export const TaskForm: React.FC<TaskFormProps> = ({ onAddTask, onClose }) => {
             type="submit"
             className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-medium shadow-lg shadow-indigo-200 transition-all active:scale-[0.98]"
           >
-            加入代辦事項
+            {isEditing ? '更新事項' : '加入代辦事項'}
           </button>
         </form>
       </div>

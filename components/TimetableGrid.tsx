@@ -6,9 +6,10 @@ import { Trash2 } from 'lucide-react';
 interface TimetableGridProps {
   courses: Course[];
   onDeleteCourse: (id: string) => void;
+  onEditCourse: (course: Course) => void;
 }
 
-export const TimetableGrid: React.FC<TimetableGridProps> = ({ courses, onDeleteCourse }) => {
+export const TimetableGrid: React.FC<TimetableGridProps> = ({ courses, onDeleteCourse, onEditCourse }) => {
   const hours = Array.from({ length: END_HOUR - START_HOUR + 1 }, (_, i) => START_HOUR + i);
 
   // Helper to calculate position and height
@@ -76,13 +77,16 @@ export const TimetableGrid: React.FC<TimetableGridProps> = ({ courses, onDeleteC
                     <div
                       key={course.id}
                       style={style}
+                      onClick={() => onEditCourse(course)}
                       className={`absolute inset-x-1 rounded-lg border p-2 flex flex-col justify-between overflow-hidden group hover:z-20 transition-all hover:shadow-lg ${course.color} bg-opacity-90 backdrop-blur-sm cursor-pointer`}
+                      title="點擊編輯課程"
                     >
                       <div className="flex justify-between items-start">
                         <span className="font-bold text-xs leading-tight line-clamp-2">{course.name}</span>
                         <button
                           onClick={(e) => { e.stopPropagation(); onDeleteCourse(course.id); }}
                           className="opacity-0 group-hover:opacity-100 text-current hover:bg-black/10 rounded p-0.5 transition-all"
+                          title="刪除課程"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>

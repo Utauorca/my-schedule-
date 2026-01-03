@@ -1,27 +1,30 @@
 import React, { useState } from 'react';
-import { Plus, X, Clock, MapPin, BookOpen } from 'lucide-react';
+import { Plus, X, Clock, MapPin, BookOpen, PenLine } from 'lucide-react';
 import { Course, DayOfWeek } from '../types';
 import { COLORS, DAYS, DAY_LABELS } from '../constants';
 
 interface CourseFormProps {
-  onAddCourse: (course: Course) => void;
+  onSave: (course: Course) => void;
   onClose: () => void;
+  initialData?: Course | null;
 }
 
-export const CourseForm: React.FC<CourseFormProps> = ({ onAddCourse, onClose }) => {
-  const [name, setName] = useState('');
-  const [location, setLocation] = useState('');
-  const [day, setDay] = useState<DayOfWeek>('Monday');
-  const [startTime, setStartTime] = useState('09:00');
-  const [endTime, setEndTime] = useState('10:00');
-  const [color, setColor] = useState(COLORS[Math.floor(Math.random() * COLORS.length)]);
+export const CourseForm: React.FC<CourseFormProps> = ({ onSave, onClose, initialData }) => {
+  const [name, setName] = useState(initialData?.name || '');
+  const [location, setLocation] = useState(initialData?.location || '');
+  const [day, setDay] = useState<DayOfWeek>(initialData?.day || 'Monday');
+  const [startTime, setStartTime] = useState(initialData?.startTime || '09:00');
+  const [endTime, setEndTime] = useState(initialData?.endTime || '10:00');
+  const [color, setColor] = useState(initialData?.color || COLORS[Math.floor(Math.random() * COLORS.length)]);
+
+  const isEditing = !!initialData;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !startTime || !endTime) return;
 
-    const newCourse: Course = {
-      id: crypto.randomUUID(),
+    const courseData: Course = {
+      id: initialData?.id || crypto.randomUUID(), // Keep ID if editing, generate new if adding
       name,
       location,
       day,
@@ -30,7 +33,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({ onAddCourse, onClose }) 
       color,
     };
 
-    onAddCourse(newCourse);
+    onSave(courseData);
     onClose();
   };
 
@@ -39,8 +42,12 @@ export const CourseForm: React.FC<CourseFormProps> = ({ onAddCourse, onClose }) 
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden animate-in fade-in zoom-in duration-200">
         <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
           <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-            <Plus className="w-5 h-5 text-brand-600" />
-            新增課程
+            {isEditing ? (
+              <PenLine className="w-5 h-5 text-brand-600" />
+            ) : (
+              <Plus className="w-5 h-5 text-brand-600" />
+            )}
+            {isEditing ? '編輯課程' : '新增課程'}
           </h2>
           <button 
             onClick={onClose}
@@ -154,7 +161,7 @@ export const CourseForm: React.FC<CourseFormProps> = ({ onAddCourse, onClose }) 
             type="submit"
             className="w-full py-3 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-medium shadow-lg shadow-brand-200 transition-all active:scale-[0.98] mt-2"
           >
-            加入課表
+            {isEditing ? '更新課程資訊' : '加入課表'}
           </button>
         </form>
       </div>
