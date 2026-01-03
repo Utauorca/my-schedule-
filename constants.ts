@@ -5,13 +5,13 @@ export const DAYS: DayOfWeek[] = [
 ];
 
 export const DAY_LABELS: Record<DayOfWeek, string> = {
-  'Monday': '週一',
-  'Tuesday': '週二',
-  'Wednesday': '週三',
-  'Thursday': '週四',
-  'Friday': '週五',
-  'Saturday': '週六',
-  'Sunday': '週日',
+  'Monday': '星期一',
+  'Tuesday': '星期二',
+  'Wednesday': '星期三',
+  'Thursday': '星期四',
+  'Friday': '星期五',
+  'Saturday': '星期六',
+  'Sunday': '星期日',
 };
 
 export const COLORS = [

@@ -105,7 +105,8 @@ export const CourseForm: React.FC<CourseFormProps> = ({ onSave, onClose, initial
                         : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                     }`}
                   >
-                    {DAY_LABELS[d].replace('週', '')}
+                    {/* Take the last character: 星期一 -> 一 */}
+                    {DAY_LABELS[d].slice(-1)}
                   </button>
                 ))}
               </div>
