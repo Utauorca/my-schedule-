@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Task } from '../types';
 import { Trash2, AlertCircle, Clock, CheckCircle2, CircleDashed } from 'lucide-react';
 
@@ -6,7 +6,6 @@ interface EisenhowerMatrixProps {
   tasks: Task[];
   onDeleteTask: (id: string) => void;
   onEditTask: (task: Task) => void;
-  onMoveTask: (taskId: string, isUrgent: boolean, isImportant: boolean) => void;
 }
 
 const Quadrant: React.FC<{
@@ -15,98 +14,60 @@ const Quadrant: React.FC<{
   tasks: Task[];
   onDelete: (id: string) => void;
   onEdit: (task: Task) => void;
-  isUrgent: boolean;
-  isImportant: boolean;
-  onDropTask: (taskId: string, isUrgent: boolean, isImportant: boolean) => void;
   bgColor: string;
   borderColor: string;
   textColor: string;
   icon: React.ReactNode;
-}> = ({ title, subtitle, tasks, onDelete, onEdit, isUrgent, isImportant, onDropTask, bgColor, borderColor, textColor, icon }) => {
-  const [isOver, setIsOver] = useState(false);
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault(); // Essential to allow dropping
-    setIsOver(true);
-  };
-
-  const handleDragLeave = () => {
-    setIsOver(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsOver(false);
-    const taskId = e.dataTransfer.getData('text/plain');
-    if (taskId) {
-      onDropTask(taskId, isUrgent, isImportant);
-    }
-  };
-
-  return (
-    <div 
-      className={`flex flex-col h-full rounded-2xl border-2 transition-all duration-200 ${isOver ? 'ring-4 ring-offset-2 ring-indigo-200 scale-[1.01]' : ''} ${borderColor} ${bgColor} overflow-hidden`}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-    >
-      {/* Header */}
-      <div className={`px-4 py-3 border-b ${borderColor} flex justify-between items-center bg-white/50 backdrop-blur-sm`}>
-        <div>
-          <h3 className={`font-bold ${textColor} flex items-center gap-2`}>
-            {icon}
-            {title}
-          </h3>
-          <p className={`text-xs ${textColor} opacity-80 font-medium`}>{subtitle}</p>
-        </div>
-        <span className={`px-2 py-0.5 rounded-full text-xs font-bold bg-white/80 ${textColor}`}>
-          {tasks.length}
-        </span>
+}> = ({ title, subtitle, tasks, onDelete, onEdit, bgColor, borderColor, textColor, icon }) => (
+  <div className={`flex flex-col h-full rounded-2xl border-2 ${borderColor} ${bgColor} overflow-hidden`}>
+    <div className={`px-4 py-3 border-b ${borderColor} flex justify-between items-center bg-white/50 backdrop-blur-sm`}>
+      <div>
+        <h3 className={`font-bold ${textColor} flex items-center gap-2`}>
+          {icon}
+          {title}
+        </h3>
+        <p className={`text-xs ${textColor} opacity-80 font-medium`}>{subtitle}</p>
       </div>
-
-      {/* Content */}
-      <div className="flex-1 p-3 overflow-y-auto space-y-2 no-scrollbar">
-        {tasks.length === 0 ? (
-          <div className="h-full flex flex-col items-center justify-center text-center opacity-40 py-8 pointer-events-none select-none">
-             <p className={`text-sm ${textColor}`}>拖曳事項至此</p>
-          </div>
-        ) : (
-          tasks.map((task) => (
-            <div 
-              key={task.id} 
-              draggable
-              onDragStart={(e) => {
-                e.dataTransfer.setData('text/plain', task.id);
-                e.dataTransfer.effectAllowed = 'move';
-              }}
-              onClick={() => onEdit(task)}
-              className="bg-white p-3 rounded-xl shadow-sm border border-black/5 hover:shadow-md transition-all group cursor-grab active:cursor-grabbing hover:scale-[1.02] relative"
-              title="拖曳以移動，點擊以編輯"
-            >
-              <div className="flex justify-between items-start gap-2">
-                <h4 className="font-semibold text-gray-800 text-sm leading-snug">{task.title}</h4>
-                <button
-                  onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
-                  className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1 hover:bg-red-50 rounded"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="mt-2 text-xs text-gray-500 font-medium flex items-center gap-1">
-                <span className="inline-block w-2 h-2 rounded-full bg-gray-300"></span>
-                {new Date(task.deadline).toLocaleString('zh-TW', { 
-                  month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' 
-                })}
-              </div>
-            </div>
-          ))
-        )}
-      </div>
+      <span className={`px-2 py-0.5 rounded-full text-xs font-bold bg-white/80 ${textColor}`}>
+        {tasks.length}
+      </span>
     </div>
-  );
-};
+    <div className="flex-1 p-3 overflow-y-auto space-y-2 no-scrollbar">
+      {tasks.length === 0 ? (
+        <div className="h-full flex flex-col items-center justify-center text-center opacity-40 py-8 pointer-events-none select-none">
+           <p className={`text-sm ${textColor}`}>無事項</p>
+        </div>
+      ) : (
+        tasks.map((task) => (
+          <div 
+            key={task.id} 
+            onClick={() => onEdit(task)}
+            className="bg-white p-3 rounded-xl shadow-sm border border-black/5 hover:shadow-md transition-all group cursor-pointer hover:scale-[1.02] active:scale-[0.98]"
+            title="點擊編輯"
+          >
+            <div className="flex justify-between items-start gap-2">
+              <h4 className="font-semibold text-gray-800 text-sm leading-snug">{task.title}</h4>
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(task.id); }}
+                className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1 hover:bg-red-50 rounded"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="mt-2 text-xs text-gray-500 font-medium flex items-center gap-1">
+              <span className="inline-block w-2 h-2 rounded-full bg-gray-300"></span>
+              {new Date(task.deadline).toLocaleString('zh-TW', { 
+                month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' 
+              })}
+            </div>
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+);
 
-export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({ tasks, onDeleteTask, onEditTask, onMoveTask }) => {
+export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({ tasks, onDeleteTask, onEditTask }) => {
   // Filter tasks into quadrants
   const urgentImportant = tasks.filter(t => t.isUrgent && t.isImportant);
   const notUrgentImportant = tasks.filter(t => !t.isUrgent && t.isImportant);
@@ -130,9 +91,6 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({ tasks, onDel
           tasks={urgentImportant}
           onDelete={onDeleteTask}
           onEdit={onEditTask}
-          isUrgent={true}
-          isImportant={true}
-          onDropTask={onMoveTask}
           bgColor="bg-red-50"
           borderColor="border-red-200"
           textColor="text-red-800"
@@ -146,9 +104,6 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({ tasks, onDel
           tasks={notUrgentImportant}
           onDelete={onDeleteTask}
           onEdit={onEditTask}
-          isUrgent={false}
-          isImportant={true}
-          onDropTask={onMoveTask}
           bgColor="bg-blue-50"
           borderColor="border-blue-200"
           textColor="text-blue-800"
@@ -162,9 +117,6 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({ tasks, onDel
           tasks={urgentNotImportant}
           onDelete={onDeleteTask}
           onEdit={onEditTask}
-          isUrgent={true}
-          isImportant={false}
-          onDropTask={onMoveTask}
           bgColor="bg-orange-50"
           borderColor="border-orange-200"
           textColor="text-orange-800"
@@ -178,9 +130,6 @@ export const EisenhowerMatrix: React.FC<EisenhowerMatrixProps> = ({ tasks, onDel
           tasks={notUrgentNotImportant}
           onDelete={onDeleteTask}
           onEdit={onEditTask}
-          isUrgent={false}
-          isImportant={false}
-          onDropTask={onMoveTask}
           bgColor="bg-gray-100"
           borderColor="border-gray-200"
           textColor="text-gray-600"

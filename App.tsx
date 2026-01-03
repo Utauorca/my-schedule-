@@ -135,11 +135,9 @@ const App: React.FC = () => {
   // --- Task Handlers ---
   const handleSaveTask = (taskData: Task) => {
     if (editingTask) {
-      // Update
-      setTasks(prev => prev.map(t => t.id === taskData.id ? taskData : t));
+       setTasks(prev => prev.map(t => t.id === taskData.id ? taskData : t));
     } else {
-      // Add
-      setTasks(prev => [...prev, taskData]);
+       setTasks(prev => [...prev, taskData]);
     }
     setEditingTask(null);
     setIsTaskFormOpen(false);
@@ -151,15 +149,6 @@ const App: React.FC = () => {
 
   const handleEditTaskTrigger = (task: Task) => {
     setEditingTask(task);
-  };
-
-  const handleMoveTask = (taskId: string, isUrgent: boolean, isImportant: boolean) => {
-    setTasks(prev => prev.map(t => {
-      if (t.id === taskId) {
-        return { ...t, isUrgent, isImportant };
-      }
-      return t;
-    }));
   };
 
   const handleAnalyze = useCallback(async () => {
@@ -203,12 +192,7 @@ const App: React.FC = () => {
               onEditCourse={handleEditCourseTrigger}
             />;
       case 'tasks': 
-        return <EisenhowerMatrix 
-                  tasks={tasks} 
-                  onDeleteTask={handleDeleteTask} 
-                  onEditTask={handleEditTaskTrigger}
-                  onMoveTask={handleMoveTask}
-               />;
+        return <EisenhowerMatrix tasks={tasks} onDeleteTask={handleDeleteTask} onEditTask={handleEditTaskTrigger} />;
       case 'calendar': 
         return <CalendarView tasks={tasks} onDeleteTask={handleDeleteTask} />;
       default: return null;
@@ -328,4 +312,59 @@ const App: React.FC = () => {
           onSave={handleSaveCourse} 
           onClose={() => {
             setIsCourseFormOpen(false);
-            set
+            setEditingCourse(null);
+          }} 
+          initialData={editingCourse}
+        />
+      )}
+      
+      {(isTaskFormOpen || editingTask) && (
+        <TaskForm 
+          onSave={handleSaveTask} 
+          onClose={() => {
+            setIsTaskFormOpen(false);
+            setEditingTask(null);
+          }} 
+          initialData={editingTask} 
+        />
+      )}
+      
+      {isSettingsOpen && <SettingsModal currentSettings={settings} onSave={handleSaveSettings} onClose={() => setIsSettingsOpen(false)} />}
+
+      <AIAdvisor 
+        isOpen={isAdvisorOpen}
+        onClose={() => setIsAdvisorOpen(false)}
+        isLoading={isAnalyzing}
+        analysis={analysisResult}
+        onAnalyze={handleAnalyze}
+      />
+    </div>
+  );
+};
+
+// Helper Component for Empty States
+const EmptyState: React.FC<{
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  action: () => void;
+  actionText: string;
+}> = ({ icon, title, description, action, actionText }) => (
+  <div className="h-full flex flex-col items-center justify-center text-center space-y-6 animate-in fade-in zoom-in duration-500">
+    <div className="w-48 h-48 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+       {icon}
+    </div>
+    <div className="space-y-2 max-w-md">
+      <h2 className="text-2xl font-bold text-gray-800">{title}</h2>
+      <p className="text-gray-500">{description}</p>
+    </div>
+    <button
+       onClick={action}
+       className="px-6 py-3 bg-white border border-gray-200 hover:border-brand-500 hover:text-brand-600 text-gray-600 rounded-xl font-medium transition-all shadow-sm"
+     >
+       {actionText}
+     </button>
+ </div>
+);
+
+export default App;
